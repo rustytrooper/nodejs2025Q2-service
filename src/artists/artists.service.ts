@@ -1,26 +1,78 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
+import { Artist } from './entities/artist.entity';
+import { validate as uuidValidate, v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ArtistsService {
-  create(createArtistDto: CreateArtistDto) {
-    return 'This action adds a new artist';
+  private artists: Artist[] = [];
+  findAll(): Artist[] {
+    return this.artists;
   }
 
-  findAll() {
-    return `This action returns all artists`;
+  findOne(id: string): Artist {
+    if (!uuidValidate(id)) {
+      throw new BadRequestException('ArtistId is invalid (not uuid)');
+    }
+
+    const artist = this.artists.find((artist) => artist.id === id);
+    if (!artist) {
+      throw new NotFoundException('Artist not found');
+    }
+    return artist;
+  }
+  create(createArtistDto: CreateArtistDto): Artist {
+    if (!createArtistDto.name || createArtistDto.grammy === undefined) {
+      throw new BadRequestException('Required fields are missing');
+    }
+
+    const newArtist: Artist = {
+      id: uuidv4(),
+      name: createArtistDto.name,
+      grammy: createArtistDto.grammy,
+    };
+
+    this.artists.push(newArtist);
+    return newArtist;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} artist`;
+  update(id: string, updateArtistDto: UpdateArtistDto): Artist {
+    if (!uuidValidate(id)) {
+      throw new BadRequestException('ArtistId is invalid (not uuid)');
+    }
+
+    const artistIndex = this.artists.findIndex((artist) => artist.id === id);
+    if (artistIndex === -1) {
+      throw new NotFoundException('Artist not found');
+    }
+
+    const updatedArtist: Artist = {
+      ...this.artists[artistIndex],
+      ...updateArtistDto,
+    };
+
+    this.artists[artistIndex] = updatedArtist;
+    return updatedArtist;
+  }
+  remove(id: string): void {
+    if (!uuidValidate(id)) {
+      throw new BadRequestException('ArtistId is invalid (not uuid)');
+    }
+
+    const artistIndex = this.artists.findIndex((artist) => artist.id === id);
+    if (artistIndex === -1) {
+      throw new NotFoundException('Artist not found');
+    }
+
+    this.artists.splice(artistIndex, 1);
   }
 
-  update(id: number, updateArtistDto: UpdateArtistDto) {
-    return `This action updates a #${id} artist`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} artist`;
+  exists(id: string): boolean {
+    return this.artists.some((artist) => artist.id === id);
   }
 }
