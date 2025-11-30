@@ -3,7 +3,7 @@ import { User } from './users/entities/user.entity';
 import { Artist } from './artists/entities/artist.entity';
 import { Track } from './tracks/entities/track.entity';
 import { Album } from './albums/entities/album.entity';
-import { Favourite } from './favourites/entities/favourite.entity';
+import { Favorites } from './favourites/entities/favourite.entity';
 
 @Injectable()
 export class AppService {
@@ -15,7 +15,7 @@ export class AppService {
     artists: Artist[];
     tracks: Track[];
     albums: Album[];
-    favourites: Favourite;
+    favourites: Favorites;
   } = {
     users: [],
     artists: [],

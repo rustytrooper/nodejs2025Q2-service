@@ -1,34 +1,66 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { FavouritesService } from './favourites.service';
-import { CreateFavouriteDto } from './dto/create-favourite.dto';
-import { UpdateFavouriteDto } from './dto/update-favourite.dto';
+import { AddToFavouritesResponseDto } from './dto/add-to-favorites-dto';
+import { FavouritesResponseDto } from './dto/favourites-response.dto';
 
-@Controller('favourites')
+@Controller('favs')
 export class FavouritesController {
   constructor(private readonly favouritesService: FavouritesService) {}
 
-  @Post()
-  create(@Body() createFavouriteDto: CreateFavouriteDto) {
-    return this.favouritesService.create(createFavouriteDto);
-  }
-
   @Get()
-  findAll() {
-    return this.favouritesService.findAll();
+  async findAll(): Promise<FavouritesResponseDto> {
+    const favourites = await this.favouritesService.findAll();
+    return new FavouritesResponseDto(
+      favourites.artists,
+      favourites.albums,
+      favourites.tracks,
+    );
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.favouritesService.findOne(+id);
+  @Post('track/:id')
+  @HttpCode(HttpStatus.CREATED)
+  addTrack(@Param('id') id: string): AddToFavouritesResponseDto {
+    this.favouritesService.addTrack(id);
+    return new AddToFavouritesResponseDto('track');
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFavouriteDto: UpdateFavouriteDto) {
-    return this.favouritesService.update(+id, updateFavouriteDto);
+  @Delete('track/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeTrack(@Param('id') id: string) {
+    this.favouritesService.removeTrack(id);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.favouritesService.remove(+id);
+  @Post('album/:id')
+  @HttpCode(HttpStatus.CREATED)
+  addAlbum(@Param('id') id: string): AddToFavouritesResponseDto {
+    this.favouritesService.addAlbum(id);
+    return new AddToFavouritesResponseDto('album');
+  }
+
+  @Delete('album/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeAlbum(@Param('id') id: string) {
+    this.favouritesService.removeAlbum(id);
+  }
+
+  @Post('artist/:id')
+  @HttpCode(HttpStatus.CREATED)
+  addArtist(@Param('id') id: string): AddToFavouritesResponseDto {
+    this.favouritesService.addArtist(id);
+    return new AddToFavouritesResponseDto('artist');
+  }
+
+  @Delete('artist/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeArtist(@Param('id') id: string) {
+    this.favouritesService.removeArtist(id);
   }
 }

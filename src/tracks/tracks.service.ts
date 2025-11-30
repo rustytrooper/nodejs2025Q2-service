@@ -8,10 +8,16 @@ import { UpdateTrackDto } from './dto/update-track.dto';
 import { Track } from './entities/track.entity';
 import { validate as uuidValidate, v4 as uuidv4 } from 'uuid';
 import { ArtistsService } from '../artists/artists.service';
+import { AlbumsService } from '../albums/albums.service';
+import { FavouritesService } from '../favourites/favourites.service';
 
 @Injectable()
 export class TracksService {
-  constructor(private artistsService: ArtistsService) {}
+  constructor(
+    private artistsService: ArtistsService,
+    private albumsService: AlbumsService,
+    private favouritesService: FavouritesService,
+  ) {}
   private tracks: Track[] = [];
 
   findAll(): Track[] {
@@ -32,11 +38,19 @@ export class TracksService {
     if (!createTrackDto.name || createTrackDto.duration === undefined) {
       throw new BadRequestException('Required fields are missing');
     }
+
     if (
       createTrackDto.artistId &&
       !this.artistsService.exists(createTrackDto.artistId)
     ) {
       throw new BadRequestException('Artist not found');
+    }
+
+    if (
+      createTrackDto.albumId &&
+      !this.albumsService.exists(createTrackDto.albumId)
+    ) {
+      throw new BadRequestException('Album not found');
     }
 
     const newTrack: Track = {
@@ -57,14 +71,23 @@ export class TracksService {
     }
 
     const trackIndex = this.tracks.findIndex((track) => track.id === id);
+
     if (trackIndex === -1) {
       throw new NotFoundException('Track not found');
     }
+
     if (
       updateTrackDto.artistId &&
       !this.artistsService.exists(updateTrackDto.artistId)
     ) {
       throw new BadRequestException('Artist not found');
+    }
+
+    if (
+      updateTrackDto.albumId &&
+      !this.albumsService.exists(updateTrackDto.albumId)
+    ) {
+      throw new BadRequestException('Album not found');
     }
 
     const updatedTrack: Track = {
@@ -85,6 +108,8 @@ export class TracksService {
     if (trackIndex === -1) {
       throw new NotFoundException('Track not found');
     }
+
+    this.favouritesService.removeTrackReferences(id);
 
     this.tracks.splice(trackIndex, 1);
   }
